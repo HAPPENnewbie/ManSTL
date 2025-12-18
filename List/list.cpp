@@ -98,6 +98,7 @@ public:
     }
 
 
+
 private:
     // 节点类，双向链表的单个节点
     class node{
@@ -111,60 +112,117 @@ private:
     };
     node* m_head; // 链表头
     node* m_tail; // 链表尾
-    friend ostream& operator<<(ostream& os, list<int>& l);
+
+public:
+    // 迭代类
+    class iterator{
+        public:
+            iterator(node* start, node* cur, node* end)
+            :m_start{start}, m_cur{cur}, m_end{end}
+            {}
+            // 重载 *， 获取迭代器指向节点的数据
+            T& operator*() {  
+                if (m_cur == nullptr)
+                    throw underflow_error("null node");
+                return m_cur -> m_data;
+            }
+            // 重载 ++ , 这里实现的是循环迭代器
+            iterator operator++() {
+                if (m_cur == nullptr) 
+                    m_cur = m_start;
+                else
+                    m_cur = m_cur -> m_next;
+                return *this; 
+            }
+            // 重载 --
+            iterator operator--() {
+                if (m_cur == nullptr) 
+                    m_cur = m_end;
+                else
+                    m_cur = m_cur -> m_prev;
+                return *this;
+            }
+            // 重载==
+            bool operator==(const iterator& that)const {
+                return m_start == that.m_start && m_cur == that.m_cur && m_end == that.m_end;
+            }
+            // 重载!=
+            bool operator!=(const iterator& that)const {
+                return !(*this==that);
+            }
+        private:
+            node* m_start;  //开始指向
+            node* m_cur;    //当前指向
+            node* m_end;    //终止指向
+            friend class list;
+    };
+// 获取起始迭代器
+    iterator begin() {  
+        return iterator(m_head, m_head, m_tail);
+    } 
+// 获取结尾迭代器
+    iterator end() {  
+        return iterator(m_head, nullptr, m_tail);
+    }
+// 迭代器指向位置添加节点
+    void insert(const iterator& loc, const T& data) {
+        if (loc == end()) {
+            push_back(data);
+        }else {
+            node* pnode = new node(loc.m_cur -> m_prev, loc.m_cur, data);
+            if (pnode -> m_prev)
+                pnode -> m_prev -> m_next = pnode;
+            else
+                m_head = pnode;
+            pnode -> m_next -> m_prev = pnode;
+        }
+    }
+// 删除迭代器指向的节点
+    void erase(const iterator& loc) {
+        if (loc == end()) return;
+        node* pnode = loc.m_cur;
+        if (pnode -> m_prev)
+            pnode -> m_prev -> m_next = pnode -> m_next;
+        else
+            m_head = pnode -> m_next;
+
+        if (pnode -> m_next) 
+            pnode -> m_next -> m_prev = pnode -> m_prev;
+        else 
+            m_tail = pnode -> m_prev;
+        delete pnode;
+    }
+
 };
 
 
 
 
 
-// -------------------------------------模拟用户---------------------------------
-ostream& operator<<(ostream& os, list<int>& l) {  // 输出流重载，告诉out怎么打印链表
-    for (list<int>::node* pnode = l.m_head; pnode; pnode = pnode -> m_next) {
-        os << pnode -> m_data << ' ';
+// 利用迭代器遍历链表
+void print(const string& str, list<int>& l) {
+    cout << str << endl;
+    typedef list<int>::iterator IT;
+    for (IT it = l.begin(); it != l.end(); ++it) {
+        cout << *it << ' ';
     }
-    return os;
+    cout << endl;
 }
 
 
 
 int main() {
     list<int> ls;
+    for (int i = 1; i <= 5; i++) {
+        ls.push_back(i);
+    }
+    print("打印链表为", ls);
 
-    // 添加节点测试
-    ls.push_back(1);
-    ls.push_back(2);
-    ls.push_back(3);
-    ls.push_back(4);
-    ls.push_front(0);
-    ls.push_front(-1);
-    ls.push_front(-2);
-    ls.push_front(-3);
-    cout << ls << endl;
+    ls.insert(ls.begin(), 0);
+    print("打印链表为", ls);
 
-
-    // 删除节点测试
-    ls.pop_front();
-    ls.pop_front();
-    ls.pop_front();
-    ls.pop_front();
-
-    ls.pop_back();
-    cout << ls << endl;
-
-    // 获取节点测试1
-    int head_num = ls.front();
-    cout << head_num << endl;
-    int tail_num = ls.back();
-    cout << tail_num << endl;
-
-    // 清空链表测试
-    ls.clear();
-    cout << ls << endl;
-
-    // 获取节点测试2，验证空链表时抛出异常
-    int head_num2 = ls.front();  
-
+    ls.erase(ls.begin());
+    print("打印链表为", ls);
 
     return 0;
 }
