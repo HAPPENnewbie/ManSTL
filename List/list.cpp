@@ -1,14 +1,14 @@
 #include<iostream>
 #include<stdexcept> 
 using namespace std;
-
+#include<vector>
 template<typename T>class list{
 public:
 // 缺省函数
     list():m_head{nullptr}, m_tail{nullptr}{}
 // 拷贝构造，用存在的链表拷贝构造新的链表
     list(list const& that):m_head{nullptr}, m_tail{nullptr}{
-        for (node* pnode = that.m_head; pnode; pnode = pnode -> next) {
+        for (node* pnode = that.m_head; pnode; pnode = pnode -> m_next) {
             push_back(pnode -> m_data);
         }
     }
@@ -99,6 +99,7 @@ public:
 
 
 
+
 private:
     // 节点类，双向链表的单个节点
     class node{
@@ -113,8 +114,9 @@ private:
     node* m_head; // 链表头
     node* m_tail; // 链表尾
 
+    
 public:
-    // 迭代类
+// 迭代类
     class iterator{
         public:
             iterator(node* start, node* cur, node* end)
@@ -193,12 +195,47 @@ public:
         delete pnode;
     }
 
+
+// 正向常迭代类
+    class const_iterator{
+        public:
+            const_iterator(const iterator& it)
+            :m_it{it} 
+            {}
+            const T& operator* () {
+                return *m_it; 
+            }
+            const_iterator& operator++() {
+                ++m_it;
+                return *this;
+            }
+            const_iterator& operator--() {
+                --m_it;
+                return *this;
+            }
+            bool operator== (const const_iterator& that) const {
+                return m_it == that.m_it;
+            }
+            bool operator!= (const const_iterator& that) const {
+                return !(m_it==that.m_it);
+            }
+        private:
+            iterator m_it;
+    };
+// 获取常起始迭代器
+    const_iterator begin() const {
+        return iterator(m_head, m_head, m_tail);
+    }
+// 获取常终止迭代器
+const_iterator end() const {
+        return iterator(m_head, nullptr, m_tail);
+    }
 };
 
 
 
 
-
+ 
 // 利用迭代器遍历链表
 void print(const string& str, list<int>& l) {
     cout << str << endl;
@@ -218,11 +255,11 @@ int main() {
     }
     print("打印链表为", ls);
 
-    ls.insert(ls.begin(), 0);
-    print("打印链表为", ls);
-
-    ls.erase(ls.begin());
-    print("打印链表为", ls);
-
+    const list<int> cls(ls);
+    typedef list<int>::const_iterator CIT;
+    for (CIT cit = cls.begin(); cit != cls.end(); ++cit) {
+        cout << *cit << ' ';
+    }
+    
     return 0;
 }
