@@ -1,7 +1,8 @@
 #include<iostream>
 #include<stdexcept> 
-using namespace std;
 #include<vector>
+using namespace std;
+
 template<typename T>class list{
 public:
 // 缺省函数
@@ -232,9 +233,87 @@ const_iterator end() const {
     }
 };
 
+// 查找功能,模仿stl写在全局
+template<class IT, class T>IT find(const IT& a, const IT& b, const T& data) {
+    for (IT it = a; a != b; ++it) {
+        if (*it == data) {
+            return it;
+        }
+    }
+    return b;
+}
+
+// 快速排序, < 号实现版本
+template<class IT>void sort(const IT& begin, const IT& end) {
+    IT p = begin;
+    IT last = end;
+    --last;
+    for (IT i = begin, j = last; i != j;) {
+        while (i != p && *i < *p) {
+            ++i;
+        }
+        if (i != p) {
+            swap(*i, *p);
+            p = i;
+        }
+        while (j != p && *p < *j) {
+            --j;
+        }
+        if (j != p) {
+            swap(*j, *p);
+            p = j;
+        }
+    }
+    IT it = begin;
+    ++it;
+    if (p != begin && p != it) {  // p 左侧有两个或以上的元素，左边需要递归
+        sort(begin, p);
+    }
+    it = p;
+    ++it;
+    if (it != end && it != last) { // p 右侧有两个或以上的元素，右边需要递归
+        sort(it, end);
+    }
+
+}
+
+// 快速排序, 比较器版本  (制作容器的人不负责写cmp,由用户实现)
+template<class IT, class CMP>
+void sort(const IT& begin, const IT& end, CMP cmp) {
+    IT p = begin;
+    IT last = end;
+    --last;
+    for (IT i = begin, j = last; i != j;) {
+        while (i != p && cmp(*i, *p)) {
+            ++i;
+        }
+        if (i != p) {
+            swap(*i, *p);
+            p = i;
+        }
+        while (j != p && cmp(*p, *j)) {
+            --j;
+        }
+        if (j != p) {
+            swap(*j, *p);
+            p = j;
+        }
+    }
+    IT it = begin;
+    ++it;
+    if (p != begin && p != it) {  // p 左侧有两个或以上的元素，左边需要递归
+        sort(begin, p, cmp);
+    }
+    it = p;
+    ++it;
+    if (it != end && it != last) { // p 右侧有两个或以上的元素，右边需要递归
+        sort(it, end, cmp);
+    }
+
+}
 
 
-
+//----------------------用户操作-----------------------------//
  
 // 利用迭代器遍历链表
 void print(const string& str, list<int>& l) {
@@ -248,18 +327,28 @@ void print(const string& str, list<int>& l) {
 
 
 
+
+// 用户自己写比较类
+class ZJW  {
+    public:
+        bool operator() (const int& a, const int& b) {
+            return a > b;
+        }
+};
+
+
 int main() {
     list<int> ls;
-    for (int i = 1; i <= 5; i++) {
+    for (int i = 0; i < 10; ++i) {
         ls.push_back(i);
     }
     print("打印链表为", ls);
 
-    const list<int> cls(ls);
-    typedef list<int>::const_iterator CIT;
-    for (CIT cit = cls.begin(); cit != cls.end(); ++cit) {
-        cout << *cit << ' ';
-    }
-    
+
+    // 比较器操作测试
+    ZJW zjw; // 比较器
+    sort(ls.begin(), ls.end(), zjw);
+    print("排序后",ls);
+
     return 0;
 }
